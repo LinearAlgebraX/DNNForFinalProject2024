@@ -1,31 +1,43 @@
 import torch
 import torchvision
-
 from torch.autograd import Variable
 from torchvision import datasets, transforms
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset, ConcatDataset
+from torchvision.io import read_image
+
+import os
 import cv2
+from skimage import io
+import pandas as pd
+from PIL import Image
 
-train_dataset = datasets.MNIST(root="data/", train=True, transform=transforms.ToTensor(), download=True)
-test_dataset = datasets.MNIST(root="data/", train=False, transform=transforms.ToTensor(), download=True)
 
-train_loader = DataLoader(dataset=train_dataset, batch_size=100, shuffle=True)
-test_loader = DataLoader(dataset=test_dataset, batch_size=100, shuffle=True)
+# poisoned MNIST image stored in custom dataset.
+class customDataset(Dataset):
+    def __init__(self, annotations, img_dir, flag="train", transform=None, target_transform=None):
+        # super().__init__()
+        assert flag in ["train", "test"]
+        self.flag = flag
 
-# images, labels = next(iter(train_loader))
-# img = torchvision.utils.make_grid(images, nrow=10)
-# img = img.numpy().transpose(1, 2, 0)
-# cv2.imshow("img", img)
-# cv2.waitKey(0)
+        self.image_labels = pd.read_csv(annotations)
+        self.img_dir = img_dir
+        self.transform = transform
+        self.target_transform = target_transform
 
-device = (
-    "cuda"
-    if torch.cuda.is_available()
-    else "cpu")
+    def __len__(self):
+        return len(self.image_labels)
+    
+    def __getitem__(self, index):
+        img_path = os.path.join(self.img_dir, self.image_labels.iloc[index, 0])
+        # print(img_path)
+        image = Image.fromarray(cv2.imread(img_path, -1), mode="L")
+        label = self.image_labels.iloc[index, 1]
+        if self.transform:
+            image = self.transform(image)
+        if self.target_transform:
+            label = self.target_transform(label)
+        return image, int(label)
 
-print("============================")
-print(f"Using {device} device")
-print("============================")
 
 
 class NeuralNetwork(torch.nn.Module):
@@ -52,11 +64,6 @@ class NeuralNetwork(torch.nn.Module):
         x = self.dense(x)
         return x
     
-model = NeuralNetwork().to(device)
-
-loss_fn = torch.nn.CrossEntropyLoss()
-# optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
-optimizer = torch.optim.Adam(model.parameters())
 
 def train(dataloader, model, loss_fn, optimizer):
     size = len(dataloader.dataset)
@@ -76,7 +83,7 @@ def train(dataloader, model, loss_fn, optimizer):
             print(f"loss: {loss:>7f} [{current:>5d}/{size:>5d}]")
 
 
-def test(dataloader, model, loss_fn):
+def test(dataloader, model, loss_fn, test_type):
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
     model.eval()
@@ -90,18 +97,63 @@ def test(dataloader, model, loss_fn):
     test_loss /= num_batches
     correct /= size
     print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+    if test_type == "clean":
+        with open("logs/clean&clean_log.txt", "a", encoding="utf8") as f:
+            f.write(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f}\n")
+    elif test_type == "backdoor":
+        with open("logs/misclasscifiction_log.txt", "a", encoding="utf8") as f:
+            f.write(f"Test 1%: \n Misclassification: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f}\n")
+    elif test_type == "cleanDataTest":
+        with open("logs/backdoor_cleanData_log.txt", "a", encoding="utf8") as f:
+            f.write(f"Test 1%: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f}\n")
+    elif test_type == "backdoorDataTest":
+        with open("logs/backdoorData_onClean_log.txt", "a", encoding="utf8") as f:
+            f.write(f"Test 1%: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f}\n")
 
-epochs = 20
+        
 
+
+
+# load the original dataset of MNIST from PyTorch
+train_dataset = datasets.MNIST(root="data/", train=True, transform=transforms.ToTensor(), download=True)
+test_dataset = datasets.MNIST(root="data/", train=False, transform=transforms.ToTensor(), download=True)
+
+backdoor_train = customDataset(annotations="data/PoisonedMNIST/label.csv", img_dir="data/PoisonedMNIST/img", transform=transforms.ToTensor(), flag="train")
+backdoor_test = customDataset(annotations="data/PoisonedMNIST/testlabel.csv", img_dir="data/PoisonedMNIST/test", transform=transforms.ToTensor(), flag="test")
+concat_dataset = ConcatDataset([train_dataset, backdoor_train])
+
+
+train_loader = DataLoader(dataset=concat_dataset, batch_size=100, shuffle=True)
+test_loader = DataLoader(dataset=backdoor_test, batch_size=100, shuffle=True)
+
+
+device = (
+    "cuda"
+    if torch.cuda.is_available()
+    else "cpu")
+
+print("============================")
+print(f"Using {device} device")
+print("============================")
+
+
+model = NeuralNetwork().to(device)
+
+loss_fn = torch.nn.CrossEntropyLoss()
+# optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
+optimizer = torch.optim.Adam(model.parameters())
+
+
+epochs = 6
 for t in range(epochs):
     print(f"Epoch {t+1}\n-----------------------------------------")
     train(train_loader, model, loss_fn, optimizer)
-    test(test_loader, model, loss_fn)
+    test(test_loader, model, loss_fn, "backdoor")
 print("Done!")
 
 
 Enter = input("Do you want to save this model?[y/n]")
 
 if Enter == "y":
-    torch.save(model.state_dict(), "model.pth")
+    torch.save(model.state_dict(), "result/MNISTmodel.pth")
     print("Saved PyTorch Model State to model.pth")
