@@ -2,5 +2,5 @@
 /data
 /.vscode
 test.py
-/logs
+# /logs
 /refPaper
