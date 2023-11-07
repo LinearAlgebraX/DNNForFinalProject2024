@@ -14,10 +14,8 @@ import pandas as pd
 from PIL import Image
 from sys import argv
 
-
 class customDataset(Dataset):
     def __init__(self, annotations, img_dir, flag="train", transform=None, target_transform=None):
-        # super().__init__()
         assert flag in ["train", "test"]
         self.flag = flag
 
@@ -31,7 +29,6 @@ class customDataset(Dataset):
     
     def __getitem__(self, index):
         img_path = os.path.join(self.img_dir, self.image_labels.iloc[index, 0])
-        # print(img_path)
         image = Image.fromarray(cv2.imread(img_path, -1), mode="L")
         label = self.image_labels.iloc[index, 1]
         if self.transform:
@@ -39,27 +36,12 @@ class customDataset(Dataset):
         if self.target_transform:
             label = self.target_transform(label)
         return image, int(label)
-
-
+    
 
 class NeuralNetwork(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        # self.flatten = torch.nn.Flatten()
-        # self.conv1 = torch.nn.Sequential(
-        #     torch.nn.Conv2d(1,64,3,1,1),
-        #     torch.nn.ReLU(),
-        #     torch.nn.Conv2d(64,128,3,1,1),
-        #     torch.nn.ReLU(),
-        #     torch.nn.MaxPool2d(2,2)
-        # )
-        # self.dense = torch.nn.Sequential(
-        #     torch.nn.Linear(14*14*128, 1024),
-        #     torch.nn.ReLU(),
-        #     torch.nn.Dropout(p=0.5),
-        #     torch.nn.Linear(1024,10)
-        # )
-
+        
         self.conv1 = nn.Conv2d(3, 100, 5)
         self.bn1 = nn.BatchNorm2d(100)
         self.conv2 = nn.Conv2d(100, 150, 3)
@@ -79,7 +61,6 @@ class NeuralNetwork(torch.nn.Module):
             nn.ReLU(True)
             )
 
-        # Regressor for the 3 * 2 affine matrix
         self.fc_loc = nn.Sequential(
             nn.Linear(10 * 4 * 4, 32),
             nn.ReLU(True),
@@ -98,10 +79,6 @@ class NeuralNetwork(torch.nn.Module):
 
 
     def forward(self, x):
-        # x = self.conv1(x)
-        # x = x.view(-1, 14*14*128)
-        # x = self.dense(x)
-        # return x
         x = self.stn(x)
 
         # Perform forward pass
@@ -141,7 +118,7 @@ class Data:
         self.test_loader = None
     
     def load(self, mode):
-        if mode == "ctc/Accuracy":
+        if mode == "ctc/Accuracy" or "C-model":
             self.train_loader = DataLoader(dataset=self.train_dataset, batch_size=100, shuffle=True)
             self.test_loader = DataLoader(dataset=self.test_dataset, batch_size=100, shuffle=True)
         elif mode == "ctp/Accuracy":
@@ -150,106 +127,16 @@ class Data:
         elif mode == "ptc/Accuracy":
             self.train_loader = DataLoader(dataset=self.train_dataset, batch_size=100, shuffle=True)
             self.test_loader = DataLoader(dataset=self.backdoor_test, batch_size=100, shuffle=True)
-        elif mode == "ptp/ASR":
+        elif mode == "ptp/ASR" or "P-model":
             self.train_loader = DataLoader(dataset=self.concat_dataset, batch_size=100, shuffle=True)
             self.test_loader = DataLoader(dataset=self.backdoor_test, batch_size=100, shuffle=True)
 
 
     # uncomplete
     def loadPoison(self):
-        self.backdoor_train = customDataset(annotations="data/PoisonedMNIST/label.csv", img_dir="data/PoisonedMNIST/img", transform=transforms.ToTensor(), flag="train")
-        self.backdoor_test = customDataset(annotations="data/PoisonedMNIST/testlabel.csv", img_dir="data/PoisonedMNIST/test", transform=transforms.ToTensor(), flag="test")
-        self.concat_dataset = ConcatDataset([self.train_dataset, self.backdoor_train])
-    
+        pass
+        # self.backdoor_train = customDataset(annotations="data/PoisonedMNIST/label.csv", img_dir="data/PoisonedMNIST/img", transform=transforms.ToTensor(), flag="train")
+        # self.backdoor_test = customDataset(annotations="data/PoisonedMNIST/testlabel.csv", img_dir="data/PoisonedMNIST/test", transform=transforms.ToTensor(), flag="test")
+        # self.concat_dataset = ConcatDataset([self.train_dataset, self.backdoor_train])
 
 
-def train(dataloader, model, loss_fn, optimizer):
-    size = len(dataloader.dataset)
-    model.train()
-    for batch, (X, y) in enumerate(dataloader):
-        X, y = X.to(device), y.to(device)
-
-        pred = model(X)
-        loss = loss_fn(pred, y)
-
-        loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-
-        if batch % 100 == 0:
-            loss, current = loss.item(), (batch + 1) * len(X)
-            # print(f"loss: {loss:>7f} [{current:>5d}/{size:>5d}]")
-
-
-def test(dataloader, model, loss_fn, mode):
-    # poisonedRate = 1
-    size = len(dataloader.dataset)
-    num_batches = len(dataloader)
-    model.eval()
-    test_loss, correct = 0, 0
-    with torch.no_grad():
-        for X, y in dataloader:
-            X, y = X.to(device), y.to(device)
-            pred = model(X)
-            test_loss += loss_fn(pred, y).item()
-            correct += (pred.argmax(1) == y).type(torch.float).sum().item()
-    test_loss /= num_batches
-    correct /= size
-    print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
-    with open(f"logs/{datasetName}/log.md", "a", encoding="utf8") as f:
-        f.write(f"|{(100*correct):>0.3f}% ")
-
-
-
-
-
-
-
-global datasetName
-datasetName = "GTSRB"
-
-device = (
-    "cuda"
-    if torch.cuda.is_available()
-    else "cpu")
-# device = "cpu"
-
-print("============================")
-print(f"Using {device} device")
-print("============================")
-
-
-model = NeuralNetwork().to(device)
-data = Data()
-
-loss_fn = torch.nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters())
-
-epochs = 5
-# modeList = ["ctc/Accuracy", "ctp/Accuracy", "ptc/Accuracy", "ptp/ASR"]
-modeList = ["ctc/Accuracy"]
-if len(modeList) > 1:
-    data.loadPoison()
-
-file = open(f"logs/{datasetName}/log.md", "w", encoding="utf8")
-file.close()
-
-for mode in modeList:
-    with open(f"logs/{datasetName}/log.md", "a", encoding="utf8") as f:
-        f.write(f"|{mode}")
-    data.load(mode)
-    for t in range(epochs):
-        print(f"Epoch {t+1}\n-----------------------------------------")
-        train(data.train_loader, model, loss_fn, optimizer)
-        test(data.test_loader, model, loss_fn, mode)
-
-    with open(f"logs/{datasetName}/log.md", "a", encoding="utf8") as f:
-        f.write("|\n")
-print("Done!")
-
-
-# Enter = input("Do you want to save this model?[y/n]")
-
-# if Enter == "y":
-#     torch.save(model.state_dict(), "result/MNISTmodel.pth")
-#     print("Saved PyTorch Model State to model.pth")
