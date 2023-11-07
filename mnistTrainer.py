@@ -123,8 +123,8 @@ backdoor_test = customDataset(annotations="data/PoisonedMNIST/testlabel.csv", im
 concat_dataset = ConcatDataset([train_dataset, backdoor_train])
 
 
-train_loader = DataLoader(dataset=concat_dataset, batch_size=100, shuffle=True)
-test_loader = DataLoader(dataset=backdoor_test, batch_size=100, shuffle=True)
+train_loader = DataLoader(dataset=train_dataset, batch_size=100, shuffle=True)
+test_loader = DataLoader(dataset=test_dataset, batch_size=100, shuffle=True)
 
 
 device = (
@@ -148,12 +148,12 @@ epochs = 6
 for t in range(epochs):
     print(f"Epoch {t+1}\n-----------------------------------------")
     train(train_loader, model, loss_fn, optimizer)
-    test(test_loader, model, loss_fn, "backdoor")
+    test(test_loader, model, loss_fn, "clean")
 print("Done!")
 
 
 Enter = input("Do you want to save this model?[y/n]")
 
 if Enter == "y":
-    torch.save(model.state_dict(), "result/MNISTmodel.pth")
-    print("Saved PyTorch Model State to model.pth")
+    torch.save(model.state_dict(), "model/MNIST_para.pth")
+    print("Saved PyTorch Model State to model/MNIST_para.pth")

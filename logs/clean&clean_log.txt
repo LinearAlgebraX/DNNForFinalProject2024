@@ -1,0 +1,12 @@
+Test Error: 
+ Accuracy: 98.5%, Avg loss: 0.044583
+Test Error: 
+ Accuracy: 98.8%, Avg loss: 0.034829
+Test Error: 
+ Accuracy: 99.1%, Avg loss: 0.028545
+Test Error: 
+ Accuracy: 99.2%, Avg loss: 0.023368
+Test Error: 
+ Accuracy: 98.9%, Avg loss: 0.032109
+Test Error: 
+ Accuracy: 99.1%, Avg loss: 0.028204
