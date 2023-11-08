@@ -81,7 +81,6 @@ class NeuralNetwork(torch.nn.Module):
     def forward(self, x):
         x = self.stn(x)
 
-        # Perform forward pass
         x = self.bn1(F.max_pool2d(F.leaky_relu(self.conv1(x)),2))
         x = self.conv_drop(x)
         x = self.bn2(F.max_pool2d(F.leaky_relu(self.conv2(x)),2))
@@ -104,8 +103,6 @@ class Data:
                                 (0.2724, 0.2608, 0.2669))
         ])
 
-        # self.train_dataset = datasets.MNIST(root="data/", train=True, transform=transforms.ToTensor(), download=True)
-        # self.test_dataset = datasets.MNIST(root="data/", train=False, transform=transforms.ToTensor(), download=True)
         self.train_dataset = datasets.GTSRB(root="data/", split="train", transform=transform, download=True)
         self.test_dataset = datasets.GTSRB(root="data/", split="test", transform=transform, download=True)
 
