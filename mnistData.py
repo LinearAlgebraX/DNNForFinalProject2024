@@ -63,6 +63,7 @@ class NeuralNetwork(torch.nn.Module):
         x = self.conv1(x)
         x = x.view(-1, 14*14*128)
         x = self.dense(x)
+        # x = F.softmax(x, dim=1)
         return x
     
 

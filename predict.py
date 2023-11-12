@@ -21,6 +21,7 @@ def predict(test):
     for i, y in test:
         output = model(i)
         probs = F.softmax(output, dim=1)
+        print(probs)
         top_probs, top_labels = torch.topk(probs, k=10)
         temp = []
         for j in range(10):

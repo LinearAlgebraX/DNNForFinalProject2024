@@ -11,6 +11,7 @@ import predict
 
 
 standard_test = mnistData.customDataset(annotations="data/MNISTstandard/label.csv", img_dir="data/MNISTstandard/img", transform=transforms.ToTensor(), flag="test")
+print(standard_test[0])
 
 sample = [0]
 
