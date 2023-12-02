@@ -29,7 +29,7 @@ class customDataset(Dataset):
     
     def __getitem__(self, index):
         img_path = os.path.join(self.img_dir, self.image_labels.iloc[index, 0])
-        image = Image.fromarray(cv2.imread(img_path, -1), mode="L")
+        image = Image.fromarray(cv2.imread(img_path, -1), mode="RGB")
         label = self.image_labels.iloc[index, 1]
         if self.transform:
             image = self.transform(image)
@@ -73,8 +73,8 @@ class NeuralNetwork(torch.nn.Module):
         xs = xs.view(-1, 10 * 4 * 4)
         theta = self.fc_loc(xs)
         theta = theta.view(-1, 2, 3)
-        grid = F.affine_grid(theta, x.size())
-        x = F.grid_sample(x, grid)
+        grid = F.affine_grid(theta, x.size(), align_corners=False)
+        x = F.grid_sample(x, grid, align_corners=False)
         return x
 
 
@@ -96,44 +96,69 @@ class NeuralNetwork(torch.nn.Module):
 
 class Data:
     def __init__(self):
-        transform = transforms.Compose([
+        self.transform = transforms.Compose([
             transforms.Resize((32, 32)),
             transforms.ToTensor(),
             transforms.Normalize((0.3403, 0.3121, 0.3214),
                                 (0.2724, 0.2608, 0.2669))
         ])
 
-        self.train_dataset = datasets.GTSRB(root="data/", split="train", transform=transform, download=True)
-        self.test_dataset = datasets.GTSRB(root="data/", split="test", transform=transform, download=True)
-
+        self.train_dataset = datasets.GTSRB(root="data/", split="train", transform=self.transform, download=True)
+        self.test_dataset = datasets.GTSRB(root="data/", split="test", transform=self.transform, download=True)
 
         self.backdoor_train = None
         self.backdoor_test = None
         self.concat_dataset = None
 
         self.train_loader = None
-        self.test_loader = None
+        self.test_loaderCTC = None
+        self.test_loaderCTP = None
+        self.test_loaderPTC = None
+        self.test_loaderPTP = None
+
     
     def load(self, mode):
-        if mode == "ctc/Accuracy" or "C-model":
+        if mode == "ctc/Accuracy":
             self.train_loader = DataLoader(dataset=self.train_dataset, batch_size=100, shuffle=True)
-            self.test_loader = DataLoader(dataset=self.test_dataset, batch_size=100, shuffle=True)
+            self.test_loaderCTC = DataLoader(dataset=self.test_dataset, batch_size=100, shuffle=True)
         elif mode == "ctp/Accuracy":
             self.train_loader = DataLoader(dataset=self.concat_dataset, batch_size=100, shuffle=True)
-            self.test_loader = DataLoader(dataset=self.test_dataset, batch_size=100, shuffle=True)
+            self.test_loaderCTP = DataLoader(dataset=self.test_dataset, batch_size=100, shuffle=True)
         elif mode == "ptc/Accuracy":
             self.train_loader = DataLoader(dataset=self.train_dataset, batch_size=100, shuffle=True)
-            self.test_loader = DataLoader(dataset=self.backdoor_test, batch_size=100, shuffle=True)
-        elif mode == "ptp/ASR" or "P-model":
+            self.test_loaderPTC = DataLoader(dataset=self.backdoor_test, batch_size=100, shuffle=True)
+        elif mode == "ptp/ASR":
             self.train_loader = DataLoader(dataset=self.concat_dataset, batch_size=100, shuffle=True)
-            self.test_loader = DataLoader(dataset=self.backdoor_test, batch_size=100, shuffle=True)
+            self.test_loaderPTP = DataLoader(dataset=self.backdoor_test, batch_size=100, shuffle=True)
+        elif mode == "P-model":
+            self.train_loader = DataLoader(dataset=self.concat_dataset, batch_size=100, shuffle=True)
+            self.test_loaderCTP = DataLoader(dataset=self.test_dataset, batch_size=100, shuffle=True)
+            self.test_loaderPTC = DataLoader(dataset=self.backdoor_test, batch_size=100, shuffle=True)
+            self.test_loaderPTP = DataLoader(dataset=self.backdoor_test, batch_size=100, shuffle=True)
+        elif mode == "C-model":
+            self.train_loader = DataLoader(dataset=self.train_dataset, batch_size=100, shuffle=True)
+            self.test_loaderCTC = DataLoader(dataset=self.test_dataset, batch_size=100, shuffle=True)
+
 
 
     # uncomplete
     def loadPoison(self):
-        pass
-        # self.backdoor_train = customDataset(annotations="data/PoisonedMNIST/label.csv", img_dir="data/PoisonedMNIST/img", transform=transforms.ToTensor(), flag="train")
-        # self.backdoor_test = customDataset(annotations="data/PoisonedMNIST/testlabel.csv", img_dir="data/PoisonedMNIST/test", transform=transforms.ToTensor(), flag="test")
-        # self.concat_dataset = ConcatDataset([self.train_dataset, self.backdoor_train])
+        self.backdoor_train = customDataset(annotations="data/PoisonedGTSRB/label.csv", img_dir="data/PoisonedGTSRB/img", transform=self.transform, flag="train")
+        self.backdoor_test = customDataset(annotations="data/PoisonedGTSRB/testlabel.csv", img_dir="data/PoisonedGTSRB/test", transform=self.transform, flag="test")
+        self.concat_dataset = ConcatDataset([self.train_dataset, self.backdoor_train])
+
+    def getTestData(self, mode):
+        if mode == "ctc/Accuracy":
+            return self.test_loaderCTC
+        elif mode == "ctp/Accuracy":
+            return self.test_loaderCTP
+        elif mode == "ptc/Accuracy":
+            return self.test_loaderPTC
+        elif mode == "ptp/ASR":
+            return self.test_loaderPTP
+        elif mode == "P-model":
+            return self.test_loaderPTP
+        elif mode == "C-model":
+            return self.test_loaderCTC
 
 

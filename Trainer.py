@@ -66,8 +66,12 @@ if __name__ == "__main__":
     print(f"Using {device} device")
     print("============================")
 
-    model = mnistData.NeuralNetwork().to(device)
-    data = mnistData.Data()
+    if datasetName == "MNIST":
+        model = mnistData.NeuralNetwork().to(device)
+        data = mnistData.Data()
+    elif datasetName == "GTSRB":
+        model = gtsrbData.NeuralNetwork().to(device)
+        data = gtsrbData.Data()
 
     loss_fn = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters())
@@ -82,7 +86,7 @@ if __name__ == "__main__":
     elif state == "3":
         modeList = ["ctc/Accuracy", "ctp/Accuracy", "ptc/Accuracy", "ptp/ASR"]
         data.loadPoison()
-        log == True
+        log = True
     elif state == "-h":
         print("1 for clean model\n2 for poisoned model\n3 for test log save mode")
         exit()
