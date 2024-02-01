@@ -4,7 +4,7 @@ import torch
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
-import mnistData
+import databackdoor.mnistData as mnistData
 
 
 

@@ -3,8 +3,10 @@ import torch
 from skimage import io
 from sys import argv
 
-import gtsrbData
-import mnistData
+import databackdoor.gtsrbData as gtsrbData
+import databackdoor.mnistData as mnistData
+import databackdoor.cifar10Data as cifar10Data
+import databackdoor.cifar100Data as cifar100Data
 
 
 def train(dataloader, model, loss_fn, optimizer):
@@ -40,9 +42,13 @@ def test(dataloader, model, loss_fn, log=False):
     test_loss /= num_batches
     correct /= size
     print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f}")
-    if log == True:
+    if log == False:
+        with open(f"logs/train/{datasetName}.md", "a", encoding="utf8") as f:
+            f.write(f"{(100*correct):>0.3f} {test_loss:>8f}\n")
+    else:
         with open(f"logs/{datasetName}/log.md", "a", encoding="utf8") as f:
-            f.write(f"|{(100*correct):>0.3f}% ")
+            f.write(f"|{(100*correct):>0.3f}% |{test_loss:>8f} ")
+        
 
 
 
@@ -50,11 +56,11 @@ def test(dataloader, model, loss_fn, log=False):
 
 if __name__ == "__main__":
     global datasetName
-    datasetName = "MNIST"
-    script, state = argv
+    datasetName = "CIFAR100"
+    script, state, epochs = argv
     log = False
     modelSaver = False
-    epochs = 5
+    epochs = int(epochs)
 
     device = (
         "cuda"
@@ -69,22 +75,43 @@ if __name__ == "__main__":
     if datasetName == "MNIST":
         model = mnistData.NeuralNetwork().to(device)
         data = mnistData.Data()
+        CmodelPath = "./model/MNIST_para.pth"
+        PmodelPath = "./model/MNIST_poisoned.pth"
     elif datasetName == "GTSRB":
         model = gtsrbData.NeuralNetwork().to(device)
         data = gtsrbData.Data()
+        CmodelPath = "./model/GTSRB_para.pth"
+        PmodelPath = "./model/GTSRB_poisoned.pth"
+    elif datasetName == "CIFAR10":
+        model = cifar10Data.ResNet18().to(device)
+        data = cifar10Data.Data()
+        CmodelPath = "./model/CIFAR10_para.pth"
+        PmodelPath = "./model/CIFAR10_poisoned.pth"
+    elif datasetName == "CIFAR100":
+        model = cifar100Data.ResNet50().to(device)
+        data = cifar100Data.Data()
+        CmodelPath = "./model/CIFAR100_para.pth"
+        PmodelPath = "./model/CIFAR100_poisoned.pth"
 
     loss_fn = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters())
+    # optimizer = torch.optim.Adam(model.parameters())
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01,
+                      momentum=0.9, weight_decay=5e-4)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
     if state == "1":
         modeList = ["C-model"]
-        modelSaver = True
     elif state == "2":
         modeList = ["P-model"]
         data.loadPoison()
-        modelSaver = True
     elif state == "3":
-        modeList = ["ctc/Accuracy", "ctp/Accuracy", "ptc/Accuracy", "ptp/ASR"]
+        modeList = ["ctc/Accuracy", "ptc/Accuracy"]
+        model.load_state_dict(torch.load(CmodelPath))
+        data.loadPoison()
+        log = True
+    elif state == "4":
+        modeList = ["ctp/Accuracy", "ptp/ASR"]
+        model.load_state_dict(torch.load(PmodelPath))
         data.loadPoison()
         log = True
     elif state == "-h":
@@ -96,19 +123,17 @@ if __name__ == "__main__":
         
 
 
-    if log == True:
-        file = open(f"logs/{datasetName}/log.md", "w", encoding="utf8")
-        file.close()
+    if state == "3" or state == "4":
+        # file = open(f"logs/{datasetName}/log.md", "w", encoding="utf8")
+        # file.close()
 
         for mode in modeList:
             with open(f"logs/{datasetName}/log.md", "a", encoding="utf8") as f:
-                f.write(f"|{mode}")
+                f.write(f"|{mode[:3]}")
             data.load(mode)
-            for t in range(epochs):
-                print(f"Epoch {t+1}\n-----------------------------------------")
-                train(data.train_loader, model, loss_fn, optimizer)
-                test(data.getTestData(mode), model, loss_fn, log)
-
+            test(data.getTestData(mode), model, loss_fn, log)
+            # if datasetName == "CIFAR10":
+            #     scheduler.step()
             with open(f"logs/{datasetName}/log.md", "a", encoding="utf8") as f:
                 f.write("|\n")
         print("Done!")
@@ -122,11 +147,14 @@ if __name__ == "__main__":
                 if mode == "P-model":
                     print("Extra clean test data for poisoned model: ")
                     test(data.test_loaderCTP, model, loss_fn, log)
-        print("Done!")
+                if datasetName == "CIFAR10" or datasetName == "CIFAR100":
+                    scheduler.step()
+                if (t+1)%20 == 0:
+                    Enter = input("Do you want to save this model?[y/n]: ")
+                    if Enter == "y":
+                        name = input("Name it as [your-enter].pth: ")
+                        torch.save(model.state_dict(), f"model/{name}.pth")
+                        print(f"Saved PyTorch Model State to {name}.pth")
+                        exit()
 
-    if modelSaver:
-        Enter = input("Do you want to save this model?[y/n]: ")
-        if Enter == "y":
-            name = input("Name it as [your-enter].pth: ")
-            torch.save(model.state_dict(), f"model/{name}.pth")
-            print(f"Saved PyTorch Model State to {name}.pth")
+        print("Done!")
