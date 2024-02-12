@@ -25,4 +25,5 @@ if __name__ == "__main__":
     data_dir = "data/cifar-100-python"
     train_batch = unpickle(data_dir + "/test")
     print(train_batch.keys())
-    # print(train_batch["filenames"])
+    for i in range(5):
+        print(len(train_batch['data'][i]))

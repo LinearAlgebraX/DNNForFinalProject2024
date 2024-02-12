@@ -1,0 +1,18 @@
+\begin{thebibliography}{1}
+
+\bibitem{A1}
+M.~Bojarski, D~Del Testa, D.~Dworakowski, B.~Firner, B.~Flepp, P.~Goyal, L.~D. Jackel, M.~Monfort, U.~Muller, J.~Zhang, X.~Zhang, J.~Zhan, and K.~Zieba.
+\newblock "end to end learning for self-driving cars".
+\newblock {\em Arxiv}, 20(2), 2016.
+
+\bibitem{A2}
+M.~Ye, J.~Shen, G.~Lin, T.~Xiang, L.~Shao, and S.~C.~H. Hoi.
+\newblock "deep learning for person re-identification: A survey and outlook".
+\newblock {\em IEEE TPAMI}, 20(2), 2021.
+
+\bibitem{B1}
+S.~Kevin Zhou, Hayit Greenspan, and Dinggang Shen.
+\newblock {\em "Deep Learning for Medical Image Analysis"}.
+\newblock Elsevier, 2017.
+
+\end{thebibliography}

@@ -1,0 +1,169 @@
+\documentclass[12pt]{report}
+\usepackage{gnuplottex}
+\usepackage{csvsimple}
+\usepackage{subcaption}
+\usepackage{amsmath}
+\usepackage{multirow}
+\usepackage[top=1cm,bottom=1cm,left=1cm,right=1cm]{geometry}
+\usepackage[justification=centering]{caption}
+
+
+\title{Overactivation - Verifying and testing backdoors in deep neural networks}
+\author{Xin Wu}
+
+\begin{document}
+\maketitle
+
+\section*{Abstract}
+-- is not the final version
+
+    With the widespread integration of deep neural networks (DNNs) into contemporary societal 
+    applications, concerns are mounting over their susceptibility to malicious attacks, one such of it is 
+    backdoor attacks. Instances such as Tesla's autonomous driving accidents and the prevalence of 
+    adversarial attacks on AI image generators underscore the urgent need for robust security measures 
+    within DNNs.
+
+    This paper proposes a novel backdoor testing approach that leverages the phenomenon of neuron 
+    overactivation within DNNs to directly detect the presence of backdoors in models. To evaluate 
+    the proposed method, extensive testing and research were conducted on popular datasets and across 
+    different models. Experimental results demonstrate the effectiveness of the approach in revealing 
+    variations between various model structures and datasets.
+
+    In conclusion, this study introduces a valuable tool to mitigate the risk of backdoor attacks in 
+    DNNs, providing a reliable testing method to enhance the overall security of these systems. The 
+    effectiveness demonstrated in discerning potential threats highlights the potential of this method 
+    in fortifying artificial intelligence systems against malicious manipulation.
+
+\tableofcontents{}
+
+\chapter{Introduction}
+    Deep neural networks (DNNs) have revolutionized image recognition in various fields,
+    including autonomous driving\cite{A1}, medical diagnostics\cite{B1}, and security surveillance\cite{A2}. Their 
+    remarkable success, however, is shadowed by their vulnerability to adversarial attacks, 
+    which pose significant threats to their reliability and security. Among these adversarial 
+    threats, backdoor attacks have emerged as a particularly challenge.
+
+    Backdoor attacks involve the manipulation of DNN behavior by malicious actors through the 
+    injection of images with triggers into the training dataset. Once deployed, these triggers 
+    can activate specific behaviors or misclassifications, compromising the integrity and 
+    trustworthiness of the entire system. Detecting and mitigating such attacks are paramount 
+    for ensuring the robustness and trustworthiness of DNN-based image recognition systems.
+
+\section{Aims}
+    Related work: One of the existing model backdoor detection tools, NeuralCleanse, operates under 
+    the assumption that smaller modifications will result in misclassification by the model. Another 
+    detection method, STRIP, requires prior knowledge of trigger-related information to ascertain 
+    whether a model has been injected with a backdoor. This project aims to explore a novel method 
+    that offers greater flexibility in usage conditions compared to existing tools and methods. 
+    
+    Additionally, it aims to provide insights that could inspire advancements in the field of 
+    backdoor detection to some extent.
+\section{Structure of this Project}
+
+
+\chapter{Background}
+\section{literature review}
+
+
+\begin{table*}[t]
+    \centering
+    \caption{The information about each models\\(for CIFAR100 the attack have some bugs So I need retraining it later.)}
+    \label{table1}
+    \begin{tabular}{|c|c|c|c|c|}
+        \hline
+        Models & epoch & Clean Accuracy & ASR & Architecture \\
+        \hline
+        MNIST & 5 & 99.10$\%$ & 99.99$\%$ &2 conv$\times$1 dense \\
+        \hline
+        GTSRB & 5 & 96.255$\%$ & 91.100$\%$ &5 conv \\
+        \hline
+        FashionMNIST & 5 & 92.81$\%$ & 99.98$\%$ & 2 conv$\times$1 dense \\
+        \hline
+        CIFAR10 & 50 & 91.44$\%$ & 99.99$\%$ & ResNet18 \\
+        \hline
+        CIFAR100 & 80 & 75.84$\%$ & N/A & ResNet50 \\
+        \hline
+    
+        
+    \end{tabular}
+    
+\end{table*}
+
+
+\begin{table*}[t]
+    \centering
+    \caption{Below showed the Activation index($S_A$ means the set of maximum value which produced by the feature map from 1st Relu() for each noise images) for each dataset in different epoch. Totally have 200 noise images.}
+    \label{table2}
+    \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+    \hline
+    \multicolumn{2}{|c|}{\multirow{2}{*}{Model}} & \multicolumn{3}{c|}{MNIST}&\multicolumn{4}{c|}{GTSRB}\\
+    \cline{3-9}
+    
+    \multicolumn{2}{|c|}{} & 5 epoch & 10 epoch & 20 epoch & 10 epoch & 20 epoch & 30 epoch & 50 epoch \\
+    \hline
+
+    % Start the main table
+
+    \multirow{3}{*}{max($S_A$)} & \textbf{Backdoor} &3.9615 &3.5404 &5.0043 &4.7136 &4.3301 &4.611 &3.5434 \\
+    \cline{2-9}
+    
+    \multirow{3}{*}{} & \textbf{Clean} &3.2132 &3.9103 &5.1311 &4.345 &3.3928 &3.5097	&3.2779\\
+    \cline{2-9}
+    
+    \multirow{3}{*}{} & \textbf{B/C} &\textbf{1.2328} &\textbf{0.9054} &\textbf{0.9752} &\textbf{1.0848} &\textbf{1.2762}	&\textbf{1.3138}&\textbf{1.081} \\
+    \hline
+
+    \multirow{3}{*}{mean($S_A$)} & \textbf{Backdoor} &3.2140 &2.6816 &3.6324 &3.6496 &2.9364 &3.1777 &2.3143 \\
+    \cline{2-9}
+    
+    \multirow{3}{*}{} & \textbf{Clean} &2.5139	&3.0669 &3.8204 &3.216 &2.5081	&2.0844 &2.3850\\
+    \cline{2-9}
+    
+    \multirow{3}{*}{} & \textbf{B/C} &\textbf{1.2784} &\textbf{0.8743} &\textbf{0.9507} &\textbf{1.1348} &\textbf{1.1708}	&\textbf{1.5245} &\textbf{0.9704} \\
+    \hline
+
+    \multicolumn{2}{|c|}{Ratio($1stRelu_p$\textgreater $1stRelu_c$)} &\textbf{199:1}    &\textbf{17:183}	&\textbf{38:162}	&\textbf{163:37}	&\textbf{177:23}	&\textbf{195:5}	&\textbf{109:91}\\ 
+    
+    \hline
+    & & & & & & & & \\
+    \hline
+
+    \multicolumn{2}{|c|}{\multirow{2}{*}{Model}} & \multicolumn{3}{c|}{FashionMNIST}&\multicolumn{4}{c|}{CIFAR10}\\
+    \cline{3-9}
+    
+    \multicolumn{2}{|c|}{} & 5 epoch & 10 epoch & 30 epoch & 20 epoch & 30 epoch & 40 epoch & 50 epoch \\
+    \hline
+
+    % Start the main table
+
+    \multirow{3}{*}{max($S_A$)} & \textbf{Backdoor} &1.5759 &1.8628 &2.4023 &12.936 &8.8327 &5.6955 &4.2566 \\
+    \cline{2-9}
+    
+    \multirow{3}{*}{} & \textbf{Clean} &1.3684 &1.8138 &2.6442 &9.8593 &7.4869 &6.5439	&4.6565\\
+    \cline{2-9}
+    
+    \multirow{3}{*}{} & \textbf{B/C} &\textbf{1.1516} &\textbf{1.027} &\textbf{0.9085} &\textbf{1.312} &\textbf{1.1798}	&\textbf{0.8704}&\textbf{0.9141} \\
+    \hline
+
+    \multirow{3}{*}{mean($S_A$)} & \textbf{Backdoor} &1.313 &1.4639 &2.0127 &9.9769 &6.5749 &4.387 &3.4229 \\
+    \cline{2-9}
+    
+    \multirow{3}{*}{} & \textbf{Clean} &1.2007	&1.4822 &2.2154 &7.7057 &5.2923	&5.2367 &3.6726\\
+    \cline{2-9}
+    
+    \multirow{3}{*}{} & \textbf{B/C} &\textbf{1.0934} &\textbf{0.9877} &\textbf{0.9085} &\textbf{1.2947} &\textbf{1.2423}	&\textbf{0.8377} &\textbf{0.932} \\
+    \hline
+
+    \multicolumn{2}{|c|}{Ratio($1stRelu_p$\textgreater $1stRelu_c$)} &\textbf{189:11}    &\textbf{95:105}	&\textbf{12:188}	&\textbf{196:4}	&\textbf{194:6}	&\textbf{11:189}	&\textbf{60:140}\\ 
+    \hline
+    
+    \end{tabular}
+    % \label{table_MAP}
+    \end{table*}
+
+
+
+
+\bibliographystyle{plain}
+\bibliography{refPaper}
+\end{document}
