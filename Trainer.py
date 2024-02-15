@@ -8,6 +8,7 @@ import databackdoor.mnistData as mnistData
 import databackdoor.cifar10Data as cifar10Data
 import databackdoor.cifar100Data as cifar100Data
 import databackdoor.fashionData as Fashion
+import databackdoor.flowers102Data as flowers102Data
 from torch.utils.data import DataLoader
 from torchvision import transforms
 import numpy as np
@@ -76,6 +77,10 @@ def noiseTest(dataloader, datasetName, model, mode):
         handle = model.layer1.register_forward_pre_hook(pre_get_max_cov)
     elif datasetName == "Fashion":
         handle = model.conv1[1].register_forward_hook(get_max_cov)
+    elif datasetName == "CIFAR100":
+        handle = model.layer1.register_forward_pre_hook(pre_get_max_cov)
+    elif datasetName == "Flowers102":
+        return 1
 
     for i, y in dataloader:
         x += 1
@@ -123,6 +128,31 @@ if __name__ == "__main__":
         transforms.ToTensor(),
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
+    Flowerstransforms = {
+        'train': transforms.Compose([
+            transforms.RandomRotation(45),
+            transforms.CenterCrop(224),
+            transforms.RandomHorizontalFlip(p=0.2),
+            transforms.RandomVerticalFlip(p=0.2),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406],
+                                [0.229, 0.224, 0.225])
+        ]),
+        'valid': transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406],
+                                [0.229, 0.224, 0.225])
+        ]),
+        'test': transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406],
+                                [0.229, 0.224, 0.225])
+        ])
+    }
 
     if datasetName == "MNIST":
         model = mnistData.NeuralNetwork().to(device)
@@ -151,6 +181,8 @@ if __name__ == "__main__":
         data = cifar100Data.Data()
         CmodelPath = "./model/CIFAR100_para.pth"
         PmodelPath = "./model/CIFAR100_poisoned.pth"
+        noiseData= gtsrbData.customDataset(annotations="data/noise/GTSRB.csv", img_dir="data/noise/GTSRB", transform=CIFARtransform, flag="test")
+        NoiseData = DataLoader(dataset=noiseData, batch_size=1, shuffle=True)
     elif datasetName == "Fashion":
         model = Fashion.NeuralNetwork().to(device)
         data = Fashion.Data()
@@ -159,12 +191,21 @@ if __name__ == "__main__":
         # same size with MNIST
         noiseData= Fashion.customDataset(annotations="data/noise/MNIST.csv", img_dir="data/noise/MNIST", transform=transforms.ToTensor(), flag="test")
         NoiseData = DataLoader(dataset=noiseData, batch_size=1, shuffle=True)
+    elif datasetName == "Flowers102":
+        model = flowers102Data.ResNet101().to(device)
+        data = flowers102Data.Data()
+        CmodelPath = "./model/Flowers102_para.pth"
+        PmodelPath = "./model/Flowers102_poisoned.pth"
+        noiseData= flowers102Data.customDataset(annotations="data/noise/Flowers102.csv", img_dir="data/noise/Flowers102", transform=CIFARtransform, flag="test")
+        NoiseData = DataLoader(dataset=noiseData, batch_size=1, shuffle=True)
 
     loss_fn = torch.nn.CrossEntropyLoss()
+    # MNIST GTSRB
     # optimizer = torch.optim.Adam(model.parameters())
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.01,
-                      momentum=0.9, weight_decay=5e-4)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+    # CIFAR10 CIFAR100 FashionMNIST
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
+    
+    # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
     if state == "1":
         modeList = ["C-model"]
@@ -217,6 +258,7 @@ if __name__ == "__main__":
                     print("Extra clean test data for poisoned model: ")
                     test(data.test_loaderCTP, model, loss_fn, log)
                 if datasetName == "CIFAR10" or datasetName == "CIFAR100":
+                    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
                     scheduler.step()
                 if (t+1)%checkStep == 0:
                     Enter = input("Do you want to save this model?[y/n]: ")

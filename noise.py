@@ -18,8 +18,8 @@ def random_noise(width, height, nc):
 if __name__ == '__main__':
     csvData = []
     for i in range(500):
-        random_noise(32, 32, 1).save(f"data/noise/img3/noise{i}.png")
+        random_noise(224, 224, 3).save(f"data/noise/Flowers102/noise{i}.png")
         csvData.append((f"noise{i}.png", "4"))
-        with open("data/noise/label3.csv", "w", encoding="utf8", newline="") as f:
+        with open("data/noise/Flowers102.csv", "w", encoding="utf8", newline="") as f:
             writer = csv.writer(f)
             writer.writerows(csvData)
