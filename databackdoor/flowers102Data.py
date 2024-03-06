@@ -180,8 +180,8 @@ class Data:
             self.test_loaderPTC = DataLoader(dataset=self.backdoor_test, batch_size=50, shuffle=True)
             self.test_loaderPTP = DataLoader(dataset=self.backdoor_test, batch_size=50, shuffle=True)
         elif mode == "C-model":
-            self.train_loader = DataLoader(dataset=self.train_dataset, batch_size=30, shuffle=True)
-            self.test_loaderCTC = DataLoader(dataset=self.test_dataset, batch_size=30, shuffle=True)
+            self.train_loader = DataLoader(dataset=self.train_dataset, batch_size=20, shuffle=True)
+            self.test_loaderCTC = DataLoader(dataset=self.test_dataset, batch_size=20, shuffle=True)
 
 
 

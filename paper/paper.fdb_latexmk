@@ -1,14 +1,14 @@
 # Fdb version 4
-["bibtex paper"] 1707408093 "paper.aux" "paper.bbl" "paper" 1707408095 0
-  "./refPaper.bib" 1706776345 1256 730bb2bf97d88c7c5402ba89eeaa84fe ""
+["bibtex paper"] 1708018010 "paper.aux" "paper.bbl" "paper" 1708018011 0
+  "./refPaper.bib" 1708018010 2130 1837122f325b9400a9ac0b13001a4ba7 ""
   "d:/texlive/2023/texmf-dist/bibtex/bst/base/plain.bst" 1702513884 20613 bd3fbfa9f64872b81ac57a0dd2ed855f ""
-  "paper.aux" 1707408094 1480 0d83b4ffcc01f43b9782b79066675df2 "pdflatex"
+  "paper.aux" 1708010367 1480 0d83b4ffcc01f43b9782b79066675df2 "pdflatex"
   (generated)
   "paper.bbl"
   "paper.blg"
   (rewritten before read)
-["pdflatex"] 1707408093 "c:/Users/LinearAlgebrax/Desktop/DNNForFinalProject2024/paper/paper.tex" "paper.pdf" "paper" 1707408095 0
-  "c:/Users/LinearAlgebrax/Desktop/DNNForFinalProject2024/paper/paper.tex" 1707408091 7478 a80e08874affbdc95c9e8e5b19c902b6 ""
+["pdflatex"] 1708010366 "c:/Users/LinearAlgebrax/Desktop/DNNForFinalProject2024/paper/paper.tex" "paper.pdf" "paper" 1708018011 0
+  "c:/Users/LinearAlgebrax/Desktop/DNNForFinalProject2024/paper/paper.tex" 1708010366 7483 ba2e29a1d223da98204c30e34d31e7ac ""
   "d:/texlive/2023/texmf-dist/fonts/map/fontname/texfonts.map" 1702514900 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "d:/texlive/2023/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1702513544 1004 54797486969f23fa377b128694d548df ""
   "d:/texlive/2023/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex8.tfm" 1702513544 988 bdf658c3bfc2d96d3c8b02cfc1c94c20 ""
@@ -83,9 +83,9 @@
   "d:/texlive/2023/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1702517979 4754915 d2cb988feaec91ba942bb4be8aed916e ""
   "d:/texlive/2023/texmf-var/web2c/pdftex/pdflatex.fmt" 1702518071 8217796 24e49a3c6b68e9560dedf7eb5957e0e8 ""
   "d:/texlive/2023/texmf.cnf" 1702517962 713 baa45e065482d44c4cd81b98ef72c63b ""
-  "paper.aux" 1707408094 1480 0d83b4ffcc01f43b9782b79066675df2 "pdflatex"
-  "paper.bbl" 1707408093 653 4508115a8c9e1a38a77b7db0bd5886ba "bibtex paper"
-  "paper.toc" 1707408094 309 73e1fad3298f9428490f4d7e9b10de59 "pdflatex"
+  "paper.aux" 1708010367 1480 0d83b4ffcc01f43b9782b79066675df2 "pdflatex"
+  "paper.bbl" 1708018011 653 4508115a8c9e1a38a77b7db0bd5886ba "bibtex paper"
+  "paper.toc" 1708010367 309 73e1fad3298f9428490f4d7e9b10de59 "pdflatex"
   (generated)
   "paper.aux"
   "paper.log"
