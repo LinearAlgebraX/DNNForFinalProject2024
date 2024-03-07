@@ -55,15 +55,33 @@ class NeuralNetwork(torch.nn.Module):
         self.dense = torch.nn.Sequential(
             torch.nn.Linear(14*14*128, 1024),
             torch.nn.ReLU(),
-            torch.nn.Dropout(p=0.5),
-            torch.nn.Linear(1024,10)
+            torch.nn.Dropout(p=0.5)
         )
+        self.linear1 = torch.nn.Linear(1024, 50)
+        self.linear2 = torch.nn.Linear(50, 10)
         
     def forward(self, x):
         x = self.conv1(x)
         x = x.view(-1, 14*14*128)
         x = self.dense(x)
+        x = F.relu(self.linear1(x))
+        x = self.linear2(x)
         # x = F.softmax(x, dim=1)
+        return x
+    
+    def get_linear1(self, x):
+        x = self.conv1(x)
+        x = x.view(-1, 14*14*128)
+        x = self.dense(x)
+        x = F.relu(self.linear1(x))
+        return x
+    
+    def get_linear2(self, x):
+        x = self.conv1(x)
+        x = x.view(-1, 14*14*128)
+        x = self.dense(x)
+        x = F.relu(self.linear1(x))
+        x = self.linear2(x)
         return x
     
 

@@ -94,6 +94,7 @@ class Data:
         elif mode == "ptc/Accuracy":
             self.train_loader = DataLoader(dataset=self.train_dataset, batch_size=100, shuffle=True)
             self.test_loaderPTC = DataLoader(dataset=self.backdoor_test, batch_size=100, shuffle=True)
+            self.clean_test = DataLoader(dataset=self.test_dataset, batch_size=100, shuffle=True)
         elif mode == "ptp/ASR":
             self.train_loader = DataLoader(dataset=self.concat_dataset, batch_size=100, shuffle=True)
             self.test_loaderPTP = DataLoader(dataset=self.backdoor_test, batch_size=100, shuffle=True)

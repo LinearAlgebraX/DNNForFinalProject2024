@@ -94,6 +94,12 @@ def noiseTest(dataloader, datasetName, model, mode):
     elif mode == "P-model":
         with open(f"expResult/{datasetName}/poisonedLog.md", "a", encoding="utf8") as f:
             f.write(str(np.mean(maxList)) + "\n")
+    elif mode == "PreP":
+        with open(f"expResult/{datasetName}/PrePLog.md", "a", encoding="utf8") as f:
+            f.write(str(np.mean(maxList)) + "\n")
+    elif mode == "PreC":
+        with open(f"expResult/{datasetName}/PreCLog.md", "a", encoding="utf8") as f:
+            f.write(str(np.mean(maxList)) + "\n")
 
     handle.remove()
     print("Noise test finished>>>>>")
@@ -106,7 +112,11 @@ if __name__ == "__main__":
     log = False
     modelSaver = False
     epochs, checkStep = int(epochs), int(checkStep)
+    noise = True
+    c = 20
 
+# 5,5 10,15 20,20
+    
     device = (
         "cuda"
         if torch.cuda.is_available()
@@ -157,45 +167,45 @@ if __name__ == "__main__":
     if datasetName == "MNIST":
         model = mnistData.NeuralNetwork().to(device)
         data = mnistData.Data()
-        CmodelPath = "./model/MNIST_para.pth"
-        PmodelPath = "./model/MNIST_poisoned.pth"
+        CmodelPath = f"./model/MNIST_para{c}.pth"
+        PmodelPath = f"./model/MNIST_poisoned{c}.pth"
         noiseData= mnistData.customDataset(annotations="data/noise/MNIST.csv", img_dir="data/noise/MNIST", transform=transforms.ToTensor(), flag="test")
         NoiseData = DataLoader(dataset=noiseData, batch_size=1, shuffle=True)
     elif datasetName == "GTSRB":
         model = gtsrbData.NeuralNetwork().to(device)
         data = gtsrbData.Data()
-        CmodelPath = "./model/GTSRB_para.pth"
-        PmodelPath = "./model/GTSRB_poisoned.pth"
+        CmodelPath = f"./model/GTSRB_para{c}.pth"
+        PmodelPath = f"./model/GTSRB_poisoned{c}.pth"
         noiseData= gtsrbData.customDataset(annotations="data/noise/GTSRB.csv", img_dir="data/noise/GTSRB", transform=GTSRBtransform, flag="test")
         NoiseData = DataLoader(dataset=noiseData, batch_size=1, shuffle=True)
     elif datasetName == "CIFAR10":
         model = cifar10Data.ResNet18().to(device)
         data = cifar10Data.Data()
-        CmodelPath = "./model/CIFAR10_para.pth"
-        PmodelPath = "./model/CIFAR10_poisoned.pth"
+        CmodelPath = f"./model/CIFAR10_para{c}.pth"
+        PmodelPath = f"./model/CIFAR10_poisoned{c}.pth"
         # same size with GTSRB
         noiseData= gtsrbData.customDataset(annotations="data/noise/GTSRB.csv", img_dir="data/noise/GTSRB", transform=CIFARtransform, flag="test")
         NoiseData = DataLoader(dataset=noiseData, batch_size=1, shuffle=True)
     elif datasetName == "CIFAR100":
         model = cifar100Data.ResNet50().to(device)
         data = cifar100Data.Data()
-        CmodelPath = "./model/CIFAR100_para.pth"
-        PmodelPath = "./model/CIFAR100_poisoned.pth"
+        CmodelPath = f"./model/CIFAR100_para{c}.pth"
+        PmodelPath = f"./model/CIFAR100_poisoned{c}.pth"
         noiseData= gtsrbData.customDataset(annotations="data/noise/GTSRB.csv", img_dir="data/noise/GTSRB", transform=CIFARtransform, flag="test")
         NoiseData = DataLoader(dataset=noiseData, batch_size=1, shuffle=True)
     elif datasetName == "Fashion":
         model = Fashion.NeuralNetwork().to(device)
         data = Fashion.Data()
-        CmodelPath = "./model/FashionMNIST_para.pth"
-        PmodelPath = "./model/FashionMNIST_poisoned.pth"
+        CmodelPath = f"./model/FashionMNIST_para{c}.pth"
+        PmodelPath = f"./model/FashionMNIST_poisoned{c}.pth"
         # same size with MNIST
         noiseData= Fashion.customDataset(annotations="data/noise/MNIST.csv", img_dir="data/noise/MNIST", transform=transforms.ToTensor(), flag="test")
         NoiseData = DataLoader(dataset=noiseData, batch_size=1, shuffle=True)
     elif datasetName == "Flowers102":
         model = flowers102Data.ResNet101().to(device)
         data = flowers102Data.Data()
-        CmodelPath = "./model/Flowers102_para.pth"
-        PmodelPath = "./model/Flowers102_poisoned.pth"
+        CmodelPath = f"./model/Flowers102_para{c}.pth"
+        PmodelPath = f"./model/Flowers102_poisoned{c}.pth"
         noiseData= flowers102Data.customDataset(annotations="data/noise/Flowers102.csv", img_dir="data/noise/Flowers102", transform=CIFARtransform, flag="test")
         NoiseData = DataLoader(dataset=noiseData, batch_size=1, shuffle=True)
 
@@ -211,6 +221,16 @@ if __name__ == "__main__":
         modeList = ["C-model"]
     elif state == "2":
         modeList = ["P-model"]
+        data.loadPoison()
+    elif state == "PreP":
+        modeList = ["PreP"]
+        preModel = torch.load(PmodelPath)
+        model.load_state_dict(preModel)
+        data.loadPoison()
+    elif state == "PreC":
+        modeList = ["PreC"]
+        preModel = torch.load(CmodelPath)
+        model.load_state_dict(preModel)
         data.loadPoison()
     elif state == "3":
         modeList = ["ctc/Accuracy", "ptc/Accuracy"]
@@ -245,6 +265,53 @@ if __name__ == "__main__":
             with open(f"logs/{datasetName}/log.md", "a", encoding="utf8") as f:
                 f.write("|\n")
         print("Done!")
+    elif state == "PreC":
+
+        mode = "P-model"
+        data.load(mode)
+        for t in range(epochs):
+            print(f"Epoch {t+1}\n-----------------------------------------")
+            train(data.train_loader, model, loss_fn, optimizer)
+            test(data.getTestData(mode), model, loss_fn, log)
+            maxList = []
+            if noise == True:
+                noiseTest(NoiseData, datasetName, model, "PreC")
+            if mode == "P-model":
+                print("Extra clean test data for poisoned model: ")
+                test(data.test_loaderCTP, model, loss_fn, log)
+            if datasetName == "CIFAR10" or datasetName == "CIFAR100":
+                scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+                scheduler.step()
+            if (t+1)%checkStep == 0:
+                Enter = input("Do you want to save this model?[y/n]: ")
+                if Enter == "y":
+                    name = input("Name it as [your-enter].pth: ")
+                    torch.save(model.state_dict(), f"model/{name}.pth")
+                    print(f"Saved PyTorch Model State to {name}.pth")
+                    exit()
+
+    elif state == "PreP":
+        mode = "ptc/Accuracy"
+        data.load(mode)
+        for t in range(epochs):
+            print(f"Epoch {t+1}\n-----------------------------------------")
+            train(data.train_loader, model, loss_fn, optimizer)
+            test(data.getTestData(mode), model, loss_fn, log)
+            maxList = []
+            if noise == True:
+                noiseTest(NoiseData, datasetName, model, "PreP")
+            print("Extra clean test data for poisoned model: ")
+            test(data.clean_test, model, loss_fn, log)
+            if datasetName == "CIFAR10" or datasetName == "CIFAR100":
+                scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+                scheduler.step()
+            if (t+1)%checkStep == 0:
+                Enter = input("Do you want to save this model?[y/n]: ")
+                if Enter == "y":
+                    name = input("Name it as [your-enter].pth: ")
+                    torch.save(model.state_dict(), f"model/{name}.pth")
+                    print(f"Saved PyTorch Model State to {name}.pth")
+                    exit()
     else:
         for mode in modeList:
             data.load(mode)
@@ -253,7 +320,8 @@ if __name__ == "__main__":
                 train(data.train_loader, model, loss_fn, optimizer)
                 test(data.getTestData(mode), model, loss_fn, log)
                 maxList = []
-                noiseTest(NoiseData, datasetName, model, mode)
+                if noise == True:
+                    noiseTest(NoiseData, datasetName, model, mode)
                 if mode == "P-model":
                     print("Extra clean test data for poisoned model: ")
                     test(data.test_loaderCTP, model, loss_fn, log)
