@@ -113,7 +113,7 @@ if __name__ == "__main__":
     modelSaver = False
     epochs, checkStep = int(epochs), int(checkStep)
     noise = True
-    c = 20
+    c = 5
 
 # 5,5 10,15 20,20
     

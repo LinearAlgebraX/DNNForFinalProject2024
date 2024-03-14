@@ -32,7 +32,7 @@ if mode == "MNIST":
 
 key_to_maximize = torch.topk(torch.abs(model.linear1.weight).sum(dim=1), k=5)[1][0].item()
 num_line = np.linspace(0,49,50,endpoint=True)
-mask = num_line == key_to_maximize
+# mask = num_line == key_to_maximize
 
 # plt.barh(num_line[~mask],torch.abs(model.linear1.weight).sum(dim=1).detach().cpu().numpy()[~mask])
 # plt.barh(num_line[mask],torch.abs(model.linear1.weight).sum(dim=1).detach().cpu().numpy()[mask])
@@ -44,7 +44,6 @@ def get_apple_logo():
     url = "http://orig01.deviantart.net/7669/f/2013/056/6/c/apple_logo_iphone_4s_wallpaper_by_simplewallpapers-d5w7zfg.png"
 
     # create a file-like object from the url
-    f = urlopen(url)
     im = Image.open(urlopen(url)).convert('L')
     im = np.asarray(im.crop(box=(200, 520, 640, 960)).resize((28,28)))
     return im
