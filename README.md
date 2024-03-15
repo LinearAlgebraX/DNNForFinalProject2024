@@ -66,6 +66,8 @@ $ python noise.py noise MNIST 28 28 1
 It's used to get/processing data from models --> generate image and graph<br>
 The **main part of experiment**
 
+**How to use them is at the beginning of the files**
+
 
 ## Reference
 Included in the files
