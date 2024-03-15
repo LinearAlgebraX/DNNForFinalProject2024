@@ -66,7 +66,6 @@ class NeuralNetwork(torch.nn.Module):
         x = self.dense(x)
         x = F.relu(self.linear1(x))
         x = self.linear2(x)
-        # x = F.softmax(x, dim=1)
         return x
     
     def get_linear1(self, x):

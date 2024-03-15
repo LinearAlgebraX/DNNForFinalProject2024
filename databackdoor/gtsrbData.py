@@ -38,6 +38,10 @@ class customDataset(Dataset):
         return image, int(label)
     
 
+# ========================================
+# Structure ref stn_sign_gtsrb_rgb
+# From https://github.com/sobalgi/cuda
+# ========================================
 class NeuralNetwork(torch.nn.Module):
     def __init__(self):
         super().__init__()
