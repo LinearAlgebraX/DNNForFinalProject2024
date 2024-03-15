@@ -37,11 +37,7 @@ class customDataset(Dataset):
             label = self.target_transform(label)
         return image, int(label)
     
-
-# ========================================
-# Structure ref stn_sign_gtsrb_rgb
-# From https://github.com/sobalgi/cuda
-# ========================================
+    
 class NeuralNetwork(torch.nn.Module):
     def __init__(self):
         super().__init__()
@@ -55,7 +51,6 @@ class NeuralNetwork(torch.nn.Module):
         self.conv_drop = nn.Dropout2d()
         self.fc1 = nn.Linear(250*2*2, 350)
         self.fc2 = nn.Linear(350, 43)
-
         self.localization = nn.Sequential(
             nn.Conv2d(3, 8, kernel_size=7),
             nn.MaxPool2d(2, stride=2),
@@ -64,14 +59,12 @@ class NeuralNetwork(torch.nn.Module):
             nn.MaxPool2d(2, stride=2),
             nn.ReLU(True)
             )
-
         self.fc_loc = nn.Sequential(
             nn.Linear(10 * 4 * 4, 32),
             nn.ReLU(True),
             nn.Linear(32, 3 * 2)
             )
-
-        
+   
     def stn(self, x):
         xs = self.localization(x)
         xs = xs.view(-1, 10 * 4 * 4)
@@ -80,7 +73,6 @@ class NeuralNetwork(torch.nn.Module):
         grid = F.affine_grid(theta, x.size(), align_corners=False)
         x = F.grid_sample(x, grid, align_corners=False)
         return x
-
 
     def forward(self, x):
         x = self.stn(x)
