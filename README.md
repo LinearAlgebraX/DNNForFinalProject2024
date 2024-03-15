@@ -69,5 +69,7 @@ The **main part of experiment**
 **How to use them is at the beginning of the files**
 
 
-## Reference
-Included in the files
+## Reference work
+https://github.com/kuangliu/pytorch-cifar -- ResNet implementation for CIFAR10 and CIFAR100 <br>
+https://github.com/poojahira/gtsrb-pytorch -- stn implementation for GTSRB
+
