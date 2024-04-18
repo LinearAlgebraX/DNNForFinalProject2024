@@ -37,7 +37,7 @@ class customDataset(Dataset):
             label = self.target_transform(label)
         return image, int(label)
     
-    
+
 class NeuralNetwork(torch.nn.Module):
     def __init__(self):
         super().__init__()
