@@ -34,6 +34,10 @@ $ python Trainer.py <datasetname> <mode> <upper epoch> <lower epoch>
 `upper epoch`: The maximum epoch you will trained<br>
 `lower epoch`: The minimum epoch you will trained(The period of epoch you can choose to save and stop the training)<br>
 
+- parameter inside the files:
+  - `c`: See explaination of `PreC` and `PreP`
+  - `noise`: **True/False** record/not record the noise test during training process
+
 ### example:
 ```
 $ python Trainer.py MNIST 1 15 5
